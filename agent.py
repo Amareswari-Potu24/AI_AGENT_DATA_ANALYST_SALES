@@ -24,8 +24,49 @@ STRICT RULES:
 8. Only SELECT queries — never INSERT, UPDATE, CREATE or DELETE.
 9. Always give a clear plain English answer with actual numbers.
 10. Never show raw JSON or tool call syntax in your final answer.
-"""
 
+IMPORTANT — SALES MEANS REVENUE:
+- When user asks "sales" always use SUM(total_amount) as revenue
+- Never use COUNT(*) for sales questions — that gives order count not revenue
+- Always show revenue in dollars with $ sign
+- Always show both revenue AND order count when showing region/product data
+
+EXAMPLE QUERIES:
+- Sales by region:
+  SELECT c.region,
+         ROUND(SUM(o.total_amount), 2) as revenue,
+         COUNT(*) as total_orders
+  FROM orders o
+  JOIN customers c ON o.customer_id = c.id
+  GROUP BY c.region
+  ORDER BY revenue DESC
+
+- Sales by product:
+  SELECT p.product_name,
+         ROUND(SUM(o.total_amount), 2) as revenue,
+         COUNT(*) as total_orders
+  FROM orders o
+  JOIN products p ON o.product_id = p.id
+  GROUP BY p.product_name
+  ORDER BY revenue DESC
+
+- Top customer:
+  SELECT c.customer_name,
+         ROUND(SUM(o.total_amount), 2) as revenue
+  FROM orders o
+  JOIN customers c ON o.customer_id = c.id
+  GROUP BY c.customer_name
+  ORDER BY revenue DESC
+  LIMIT 1
+
+- Last 5 months sales:
+  SELECT strftime('%Y-%m', order_date) as month,
+         ROUND(SUM(total_amount), 2) as revenue
+  FROM orders
+  WHERE order_date >= date('now', '-5 months')
+  GROUP BY month
+  ORDER BY month
+"""
 TOOLS = {
     "schema_tool": schema_tool,
     "sql_query_tool": sql_query_tool
